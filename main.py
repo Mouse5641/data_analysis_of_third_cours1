@@ -4,6 +4,7 @@ from tkinter import filedialog
 import numpy as np
 import json
 from tkinter import filedialog as fd
+from первинний_аналіз import create_new_window_for_x
 
 sample_data = {}
 
@@ -15,18 +16,6 @@ def to_np_array(data_string):
     else:
         return None
 
-
-# def open_file():
-#     global content
-#     global dadas
-#     file_path = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt")])
-#     if file_path:
-#         with open(file_path, 'r') as file:
-#             content = file.read()
-#             print(content)
-#             content = to_np_array(content)
-#             dadas.extend(content)
-#             print(dadas)
 
 def open_file():
     window.filename = fd.askopenfilename(initialdir="/", title="Select file", filetypes=[('All Files', '*.*'),
@@ -45,11 +34,7 @@ def open_file():
     sample_var = tkinter.IntVar()
     sample_data[sample_name] = {"data": array, "var": sample_var}
 
-    sample_menu.add_checkbutton(label=sample_name, variable=sample_var)
-    arr = np.sort(sample_data[sample_name]["data"])
-    # print(sample_data[sample_name]["data"])
-    # print(arr)
-    # print(sample_data[sample_name]["data"])
+    sample_menu.add_checkbutton(label=sample_name, variable=sample_var, command=lambda: create_new_window_for_x(array))
 
 
 window = Tk()
@@ -64,10 +49,15 @@ file_menu1 = Menu(menubar, tearoff=0)
 file_menu1.add_command(label="Обрати файл", command=open_file)
 file_menu1.add_separator()
 file_menu1.add_command(label="Вийти", command=window.quit)
-sample_menu = Menu(menubar, tearoff=0)
-file_menu1.add_cascade(label="Вибірки", menu=sample_menu)
+# sample_menu = Menu(menubar, tearoff=0)
+# file_menu1.add_cascade(label="Вибірки", menu=sample_menu)
 
 menubar.add_cascade(label="Файл", menu=file_menu1)
+
+file_menu2 = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Первинний аналіз", menu=file_menu2)
+sample_menu = Menu(menubar, tearoff=0)
+file_menu2.add_cascade(label="Вибірки", menu=sample_menu)
 
 window.config(menu=menubar)
 
