@@ -249,7 +249,12 @@ def standr(data):
     return standr_вata
 
 
-def create_new_window_for_x(data):
+def create_new_window_for_x(sample_data):
+
+    for sample_name, sample_info in sample_data.items():
+        if sample_info["var"].get() == 1:
+            data = sample_info["data"]
+
     def change_image(data):
         arr = removeAnomalous(data)
         new_image = Image.open(create_histogram_for_x(arr))
