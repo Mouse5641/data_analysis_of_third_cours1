@@ -37,7 +37,6 @@ def scatter_plots(data):
         temp_df['Category'] = sample_name
         df = pd.concat([df, temp_df], ignore_index=True)
 
-    # plt.figure(figsize=(6.4, 4.8))
     g = sns.pairplot(df)
     g.fig.set_size_inches(6.4, 4.8)
     plt.legend([])

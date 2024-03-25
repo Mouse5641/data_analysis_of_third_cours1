@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 
 from первинний_аналіз import create_new_window_for_x, calcul_mean_square
 from візуалізація import parallel_coordinat, scatter_plots, bubble_chart
+from кореляція import correlation_matrix
 
 sample_data = {}
 sample_data1 = {}
@@ -82,7 +83,6 @@ def output():
         rms_value.append(round(calcul_mean_square(data, np.mean(data_array)), 4))
     content = f"Середнє значення: {mean_value}\n" \
               f"Середньоквадратичне значення: {rms_value}\n"
-    text_widget.insert(END, content)
 
     for i in range(len(notebook.tabs())):
         notebook.forget(0)
@@ -95,6 +95,9 @@ def output():
 
     tab3 = ImageTab(notebook, bubble_chart(selected_samples))
     notebook.add(tab3, text="Бульбашкова діаграма")
+
+    content += f"{correlation_matrix(selected_samples)}"
+    text_widget.insert(END, content)
 
 
 window = Tk()
