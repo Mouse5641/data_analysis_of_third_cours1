@@ -73,6 +73,12 @@ def output():
 
     print("Виділені вибірки:", selected_samples)
 
+    y1 = -10
+    for i in range(len(selected_samples)):
+        radiobutton1 = Radiobutton(window, text=f"{selected_samples[i][0]}", variable=var, value=f"Option{i+1}")
+        radiobutton1.place(x=660, y=y1 + 30)
+        y1 += 30
+
     mean_value = []
     rms_value = []
     text_widget.delete("1.0", END)
@@ -106,7 +112,7 @@ window.title("Аналіз даних1")
 
 style = ttk.Style()
 style.theme_use('default')
-style.configure("TNotebook", background="#DCDCDC")
+style.configure("TNotebook", background="#F0F0F0")
 
 notebook = ttk.Notebook(window)
 notebook.pack(fill=BOTH, expand=True)
@@ -138,6 +144,7 @@ text_widget.place(x=0, y=600)
 text_widget1 = Text(window, height=13, width=100)
 text_widget1.place(x=670, y=600)
 
+var = StringVar()
 
 window.mainloop()
 
