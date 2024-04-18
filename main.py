@@ -7,11 +7,35 @@ from PIL import Image, ImageTk
 
 from первинний_аналіз import create_new_window_for_x, calcul_mean_square
 from візуалізація import parallel_coordinat, scatter_plots, bubble_chart
-from кореляція import correlation_matrix
+from кореляція import correlation_matrix, partial, plural
 
 sample_data = {}
 sample_data1 = {}
 selected_samples = []
+selected_samples2 = []  # для частові коофіцієнти кореляції
+checkbuttons = []
+
+var_list1 = []
+var_list2 = []
+selected1 = []
+selected2 = []
+
+
+def print_selected_options():
+    global selected1, selected2
+    selected1.clear()
+    selected2.clear()
+
+    selected1 = [sample[1] for sample, var in zip(selected_samples, var_list1) if var.get() == 1]
+    selected2 = [sample[1] for sample, var in zip(selected_samples, var_list2) if var.get() == 1]
+    if selected1 and selected2:
+        result = partial(selected1, selected2)
+        text_widget1.delete("1.0", END)
+        text_widget1.insert(END, "\t\t\tЧасткові коефіцієнти кореляції\n")
+        text_widget1.insert(END, result)
+    else:
+        text_widget1.delete("1.0", END)
+        text_widget1.insert(END, "Не обрано жодного варіанту.")
 
 
 def deselect_previous():
@@ -65,6 +89,14 @@ class ImageTab(ttk.Frame):
 def output():
     global selected_samples
 
+    content = []
+
+    var_list1.clear()
+    var_list2.clear()
+
+    for checkbutton in checkbuttons:
+        checkbutton.destroy()
+
     selected_samples.clear()
 
     for sample_name, sample_info in sample_data.items():
@@ -73,11 +105,26 @@ def output():
 
     print("Виділені вибірки:", selected_samples)
 
-    y1 = -10
+    y1 = 0
     for i in range(len(selected_samples)):
-        radiobutton1 = Radiobutton(window, text=f"{selected_samples[i][0]}", variable=var, value=f"Option{i+1}")
-        radiobutton1.place(x=660, y=y1 + 30)
+        var = IntVar()
+        checkbutton = Checkbutton(window, text=f"{selected_samples[i][0]}", variable=var, onvalue=1, offvalue=0)
+        checkbutton.place(x=660, y=y1 + 30)
+        var_list1.append(var)
+        selected_samples2.append((selected_samples[i][0], selected_samples[i][1]))
         y1 += 30
+        checkbuttons.append(checkbutton)
+
+    y2 = 0
+    for i in range(len(selected_samples)):
+        var1 = IntVar()
+        checkbutton1 = Checkbutton(window, text=f"{selected_samples[i][0]}", variable=var1, onvalue=1, offvalue=0)
+        checkbutton1.place(x=800, y=y2 + 30)
+        var_list2.append(var1)
+        y2 += 30
+        checkbuttons.append(checkbutton1)
+
+    y1 += 30
 
     mean_value = []
     rms_value = []
@@ -87,8 +134,8 @@ def output():
         mean_value.append(round(np.mean(data_array), 4))
 
         rms_value.append(round(calcul_mean_square(data, np.mean(data_array)), 4))
-    content = f"Середнє значення: {mean_value}\n" \
-              f"Середньоквадратичне значення: {rms_value}\n"
+    content.append(f"Середнє значення: {mean_value}\n" \
+              f"Середньоквадратичне значення: {rms_value}\n")
 
     for i in range(len(notebook.tabs())):
         notebook.forget(0)
@@ -102,8 +149,11 @@ def output():
     tab3 = ImageTab(notebook, bubble_chart(selected_samples))
     notebook.add(tab3, text="Бульбашкова діаграма")
 
-    content += f"{correlation_matrix(selected_samples)}"
-    text_widget.insert(END, content)
+    content.append(f"{correlation_matrix(selected_samples)}")
+
+    content.append("\n\n\t\t\tМножинний коефіцієнт кореляції\n")
+    content.append(f"{plural(selected_samples)}")
+    text_widget.insert(END, ''.join(content))
 
 
 window = Tk()
@@ -146,6 +196,7 @@ text_widget1.place(x=670, y=600)
 
 var = StringVar()
 
+submit_button2 = Button(window, text="Підтвердити", command=print_selected_options)
+submit_button2.place(x=930, y=30)
+
 window.mainloop()
-
-
