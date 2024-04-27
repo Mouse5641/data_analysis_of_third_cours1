@@ -5,12 +5,13 @@ import numpy as np
 from tkinter import filedialog as fd
 from PIL import Image, ImageTk
 
-from первинний_аналіз import create_new_window_for_x, calcul_mean_square
+from первинний_аналіз import create_new_window_for_x, calcul_mean_square, standr
 from візуалізація import parallel_coordinat, scatter_plots, bubble_chart
 from кореляція import correlation_matrix, partial, plural
 
 sample_data = {}
 sample_data1 = {}
+sample_data2 = {}
 selected_samples = []
 selected_samples2 = []  # для частові коофіцієнти кореляції
 checkbuttons = []
@@ -38,15 +39,27 @@ def print_selected_options():
         text_widget1.insert(END, "Не обрано жодного варіанту.")
 
 
-def deselect_previous():
-    for sample_name, sample_info in sample_data1.items():
+def deselect_previous(sample_dat):
+    for sample_name, sample_info in sample_dat.items():
         sample_info["var"].set(0)
 
 
 def select_sample(sample_name):
-    deselect_previous()
+    deselect_previous(sample_data1)
     sample_data1[sample_name]["var"].set(1)
     create_new_window_for_x(sample_data1)
+
+
+def select_standart(sample_name):
+    sample_data2[sample_name]["var"].set(1)
+
+    for sample_name, sample_info in sample_data2.items():
+        if sample_info["var"].get() == 1:
+            print(sample_info["data"])
+            standart = standr(sample_info["data"])
+            sample_data2[sample_name] = {'data': standart, "var": tkinter.IntVar()}
+            print(sample_data2[sample_name])
+    # deselect_previous(sample_data2)
 
 
 def open_file():
@@ -64,11 +77,14 @@ def open_file():
     sample_name = f"Вибірка {sample_num}"
     sample_var = tkinter.IntVar()
     sample_var1 = tkinter.IntVar()
+    sample_var2 = tkinter.IntVar()
     sample_data[sample_name] = {"data": array, "var": sample_var}
     sample_data1[sample_name] = {"data": array, "var": sample_var1}
+    sample_data2[sample_name] = {"data": array, "var": sample_var2}
 
     sample_menu1.add_checkbutton(label=sample_name, variable=sample_var)
     sample_menu.add_checkbutton(label=sample_name, variable=sample_var1, command=lambda: select_sample(sample_name))
+    sample_menu2.add_checkbutton(label=sample_name, variable=sample_var2, command=lambda: select_standart(sample_name))
 
 
 class ImageTab(ttk.Frame):
@@ -185,6 +201,21 @@ file_menu2 = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="Первинний аналіз", menu=file_menu2)
 sample_menu = Menu(menubar, tearoff=0)
 file_menu2.add_cascade(label="Вибірки", menu=sample_menu)
+
+file_menu3 = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Візуалізація", menu=file_menu3)
+# sample_menu2 = Menu(menubar, tearoff=0)
+file_menu3.add_command(label="Бульбашкова", command=lambda: bubble_chart(selected_samples, 1))
+file_menu3.add_command(label="Матриця діаграм розкиду", command=lambda: scatter_plots(selected_samples, 1))
+file_menu3.add_command(label="Паралельні координати", command=lambda: parallel_coordinat(selected_samples, 1))
+
+
+file_menu4 = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Стандартизація", menu=file_menu4)
+file_menu4.add_separator()
+sample_menu2 = Menu(menubar, tearoff=0)
+file_menu4.add_cascade(label="Вибірки", menu=sample_menu2)
+
 
 window.config(menu=menubar)
 
