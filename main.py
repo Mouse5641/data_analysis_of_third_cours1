@@ -8,12 +8,16 @@ from PIL import Image, ImageTk
 from первинний_аналіз import create_new_window_for_x, calcul_mean_square, standr
 from візуалізація import parallel_coordinat, scatter_plots, bubble_chart
 from кореляція import correlation_matrix, partial, plural
+from збіги import check_mean_equality, test_covariance_equality
 
 sample_data = {}
 sample_data1 = {}
 sample_data2 = {}
+sample_data3 = {}  # для другої вибірки
+
 selected_samples = []
-selected_samples2 = []  # для частові коофіцієнти кореляції
+selected_samples2 = []  # для часткові коофіцієнти кореляції
+selected_samples3 = []  # для другої вибірки
 checkbuttons = []
 
 var_list1 = []
@@ -31,7 +35,6 @@ def print_selected_options():
     selected2 = [sample[1] for sample, var in zip(selected_samples, var_list2) if var.get() == 1]
     if selected1 and selected2:
         result = partial(selected1, selected2)
-        text_widget1.delete("1.0", END)
         text_widget1.insert(END, "\t\t\tЧасткові коефіцієнти кореляції\n")
         text_widget1.insert(END, result)
     else:
@@ -74,7 +77,7 @@ def open_file():
         array = array.flatten().tolist()
 
     sample_num = len(sample_data) + 1
-    sample_name = f"Вибірка {sample_num}"
+    sample_name = f"Ознака {sample_num}"
     sample_var = tkinter.IntVar()
     sample_var1 = tkinter.IntVar()
     sample_var2 = tkinter.IntVar()
@@ -85,6 +88,25 @@ def open_file():
     sample_menu1.add_checkbutton(label=sample_name, variable=sample_var)
     sample_menu.add_checkbutton(label=sample_name, variable=sample_var1, command=lambda: select_sample(sample_name))
     sample_menu2.add_checkbutton(label=sample_name, variable=sample_var2, command=lambda: select_standart(sample_name))
+
+
+def open_file2():
+    window.filename = fd.askopenfilename(initialdir="/", title="Select file", filetypes=[('All Files', '*.*'),
+                                                                                         ('Python Files', '*.py'),
+                                                                                         ('Text Document', '*.txt'),
+                                                                                         ('CSV files', "*.csv")])
+    global array
+
+    if window.filename.split('.')[1] == 'txt':
+        array = np.loadtxt(window.filename, delimiter=",", dtype='float')
+        array = array.flatten().tolist()
+
+    sample_num = len(sample_data3) + 1
+    sample_name = f"Ознака {sample_num}"
+    sample_var = tkinter.IntVar()
+    sample_data3[sample_name] = {"data": array, "var": sample_var}
+
+    sample_menu3.add_checkbutton(label=sample_name, variable=sample_var)
 
 
 class ImageTab(ttk.Frame):
@@ -151,7 +173,7 @@ def output():
 
         rms_value.append(round(calcul_mean_square(data, np.mean(data_array)), 4))
     content.append(f"Середнє значення: {mean_value}\n" \
-              f"Середньоквадратичне значення: {rms_value}\n")
+                   f"Середньоквадратичне значення: {rms_value}\n")
 
     for i in range(len(notebook.tabs())):
         notebook.forget(0)
@@ -162,14 +184,35 @@ def output():
     tab2 = ImageTab(notebook, scatter_plots(selected_samples))
     notebook.add(tab2, text="Матриця діаграм розкиду")
 
-    tab3 = ImageTab(notebook, bubble_chart(selected_samples))
-    notebook.add(tab3, text="Бульбашкова діаграма")
+    if len(selected_samples) > 2:
+        tab3 = ImageTab(notebook, bubble_chart(selected_samples))
+        notebook.add(tab3, text="Бульбашкова діаграма")
+    else:
+        text_widget.insert(END, "Недостатня кількість ознак для Бульбашкової діагарами\n\n")
 
     content.append(f"{correlation_matrix(selected_samples)}")
 
     content.append("\n\n\t\t\tМножинний коефіцієнт кореляції\n")
     content.append(f"{plural(selected_samples)}")
     text_widget.insert(END, ''.join(content))
+
+
+def stochastic_connection():
+    global selected_samples
+    global selected_samples3
+
+    selected_samples3.clear()
+
+    for sample_name, sample_info in sample_data3.items():
+        if sample_info["var"].get() == 1:
+            selected_samples3.append((sample_name, sample_info["data"]))
+
+    print("Виділені вибірки:", selected_samples3)
+    text_widget1.insert(END, "\n\tЗбіг k n-вимірних середніх при розбіжності  дисперсійно-коваріаційних матриць\n")
+    text_widget1.insert(END, check_mean_equality(selected_samples, selected_samples3))
+
+    text_widget1.insert(END, "\n\t\t\tЗбіг дисперсійно-коваріаційних матриць\n")
+    text_widget1.insert(END, test_covariance_equality(selected_samples, selected_samples3))
 
 
 window = Tk()
@@ -209,13 +252,20 @@ file_menu3.add_command(label="Бульбашкова", command=lambda: bubble_ch
 file_menu3.add_command(label="Матриця діаграм розкиду", command=lambda: scatter_plots(selected_samples, 1))
 file_menu3.add_command(label="Паралельні координати", command=lambda: parallel_coordinat(selected_samples, 1))
 
-
 file_menu4 = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="Стандартизація", menu=file_menu4)
 file_menu4.add_separator()
 sample_menu2 = Menu(menubar, tearoff=0)
 file_menu4.add_cascade(label="Вибірки", menu=sample_menu2)
+file_menu4.add_command(label="Відобразити", command="")
 
+file_menu5 = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Стохастичний зв'язок", menu=file_menu5)
+file_menu5.add_command(label="Обрати файл", command=open_file2)
+file_menu5.add_separator()
+sample_menu3 = Menu(menubar, tearoff=0)
+file_menu5.add_cascade(label="Вибірки", menu=sample_menu3)
+file_menu5.add_command(label="Відобразити", command=stochastic_connection)
 
 window.config(menu=menubar)
 

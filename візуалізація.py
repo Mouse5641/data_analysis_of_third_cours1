@@ -69,7 +69,7 @@ def bubble_chart(data, show=None):
             size[i] = abs(z[i]) * 10
 
         plt.scatter(x, y, s=size, color=np.random.rand(3, ), label=f'Вибірка {k + 1}')
-        labels.append(f'Вибірки: {k - 1}, {k}, {k + 1}')
+        labels.append(f'Ознаки: {k - 1}, {k}, {k + 1}')
 
     plt.xlabel('X-ось')
     plt.ylabel('Y-ось')
