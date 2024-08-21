@@ -4,26 +4,40 @@ from tkinter import ttk
 import numpy as np
 from tkinter import filedialog as fd
 from PIL import Image, ImageTk
+from tkinter import messagebox
+from tkinter import Menu
 
 from первинний_аналіз import create_new_window_for_x, calcul_mean_square, standr
 from візуалізація import parallel_coordinat, scatter_plots, bubble_chart
 from кореляція import correlation_matrix, partial, plural
 from збіги import check_mean_equality, test_covariance_equality
+from регресія import check_regression_significance, check_regression_coefficients_significance, \
+    calculate_confidence_intervals, calculate_standardized_coefficients
 
 sample_data = {}
 sample_data1 = {}
 sample_data2 = {}
 sample_data3 = {}  # для другої вибірки
+sample_data4 = {}
 
 selected_samples = []
 selected_samples2 = []  # для часткові коофіцієнти кореляції
 selected_samples3 = []  # для другої вибірки
+selected_samples4 = []  # обрана залежна змінна
 checkbuttons = []
 
 var_list1 = []
 var_list2 = []
 selected1 = []
 selected2 = []
+
+
+def clear_text():
+    text_widget1.delete(1.0, END)
+
+
+def show_context_menu(event):
+    context_menu.post(event.x_root, event.y_root)
 
 
 def print_selected_options():
@@ -81,13 +95,16 @@ def open_file():
     sample_var = tkinter.IntVar()
     sample_var1 = tkinter.IntVar()
     sample_var2 = tkinter.IntVar()
+    sample_var4 = tkinter.IntVar()
     sample_data[sample_name] = {"data": array, "var": sample_var}
     sample_data1[sample_name] = {"data": array, "var": sample_var1}
     sample_data2[sample_name] = {"data": array, "var": sample_var2}
+    sample_data4[sample_name] = {"data": array, "var": sample_var4}
 
     sample_menu1.add_checkbutton(label=sample_name, variable=sample_var)
     sample_menu.add_checkbutton(label=sample_name, variable=sample_var1, command=lambda: select_sample(sample_name))
     sample_menu2.add_checkbutton(label=sample_name, variable=sample_var2, command=lambda: select_standart(sample_name))
+    sample_menu4.add_checkbutton(label=sample_name, variable=sample_var4)
 
 
 def open_file2():
@@ -192,7 +209,7 @@ def output():
 
     content.append(f"{correlation_matrix(selected_samples)}")
 
-    content.append("\n\n\t\t\tМножинний коефіцієнт кореляції\n")
+    content.append("\n\n\t\t\tМножинний коефіцієнт кореляції")
     content.append(f"{plural(selected_samples)}")
     text_widget.insert(END, ''.join(content))
 
@@ -213,6 +230,33 @@ def stochastic_connection():
 
     text_widget1.insert(END, "\n\t\t\tЗбіг дисперсійно-коваріаційних матриць\n")
     text_widget1.insert(END, test_covariance_equality(selected_samples, selected_samples3))
+
+
+def regression():
+    global selected_samples4
+    global selected_samples
+
+    selected_samples4.clear()
+
+    for sample_name, sample_info in sample_data4.items():
+        if sample_info["var"].get() == 1:
+            selected_samples4.append((sample_name, sample_info["data"]))
+
+    if len(selected_samples4) >= 2:
+        return messagebox.showerror("Помилка", "Оберіть одну залежну змінну.")
+
+    print(selected_samples4)
+
+    independent_signs = [feature for feature in selected_samples if feature[0] != selected_samples4[0][0]]
+
+    print(independent_signs)
+
+    text_widget1.insert(END, "\n\n\t\tПеревірка значущості відтвореної регресії\n")
+    text_widget1.insert(END, check_regression_significance(independent_signs, selected_samples4))
+    text_widget1.insert(END, "\n\n\t\tОцінки параметрів регресії та дослідження їх значущості та точності\n")
+    text_widget1.insert(END, check_regression_coefficients_significance(independent_signs, selected_samples4))
+    text_widget1.insert(END, calculate_confidence_intervals(independent_signs, selected_samples4))
+    text_widget1.insert(END, calculate_standardized_coefficients(independent_signs, selected_samples4))
 
 
 window = Tk()
@@ -267,6 +311,14 @@ sample_menu3 = Menu(menubar, tearoff=0)
 file_menu5.add_cascade(label="Вибірки", menu=sample_menu3)
 file_menu5.add_command(label="Відобразити", command=stochastic_connection)
 
+file_menu6 = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Регресія", menu=file_menu6)
+# file_menu6.add_command(label="Обрати Звлежну змінну", command="")
+file_menu6.add_separator()
+sample_menu4 = Menu(menubar, tearoff=0)
+file_menu6.add_cascade(label="Обрати залежну змінну", menu=sample_menu4)
+file_menu6.add_command(label="Відобразити", command=regression)
+
 window.config(menu=menubar)
 
 text_widget = Text(window, height=13, width=80)  # Встановлення розмірів
@@ -279,5 +331,12 @@ var = StringVar()
 
 submit_button2 = Button(window, text="Підтвердити", command=print_selected_options)
 submit_button2.place(x=930, y=30)
+
+# Створюємо контекстне меню
+context_menu = Menu(window, tearoff=0)
+context_menu.add_command(label="Очистити", command=clear_text)
+
+# Прив'язуємо праву кнопку миші до виклику контекстного меню
+text_widget1.bind("<Button-3>", show_context_menu)
 
 window.mainloop()
