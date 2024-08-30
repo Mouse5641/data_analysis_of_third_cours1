@@ -100,51 +100,6 @@ def partial(lst1, lst2):
     return "".join(result)
 
 
-# def plural(selected_samples):
-#     result = []
-#     data = np.array([sample[1] for sample in selected_samples])
-#
-#     mean_values = np.mean(data, axis=1, keepdims=True)
-#     deviations = data - mean_values
-#
-#     correlation_matrix_manual = np.zeros((data.shape[0], data.shape[0]))
-#     for i in range(data.shape[0]):
-#         for j in range(data.shape[0]):
-#             if i == j:
-#                 correlation_matrix_manual[i, j] = 1.0
-#             else:
-#                 numerator = np.sum(deviations[i] * deviations[j])
-#                 denominator = np.sqrt(np.sum(deviations[i] ** 2) * np.sum(deviations[j] ** 2))
-#
-#                 correlation_matrix_manual[i, j] = numerator / denominator
-#
-#     det1 = np.linalg.det(correlation_matrix_manual)
-#
-#     matrix_without_last_row_and_column = correlation_matrix_manual[:-1, :-1]
-#     det2 = np.linalg.det(matrix_without_last_row_and_column)
-#
-#     multiple_correlation = np.round(math.sqrt(1 - (abs(det1) / abs(det2))), 3)
-#     result.append(f"Множинний коефіцієнт кореляції: {multiple_correlation}\n")
-#
-#     f1 = np.round((multiple_correlation ** 2) / (1 - multiple_correlation ** 2) * (
-#             (len(selected_samples[1][1]) - (len(selected_samples) - 1) - 1) / ((len(selected_samples)) - 1)), 3)
-#
-#     result.append(f"Статистика для обчислення значущості: {f1}\n")
-#
-#     alpha = 0.05
-#     df1 = len(selected_samples) - 1
-#     df2 = len(selected_samples[1][1]) - len(selected_samples)
-#
-#     critical_value = np.round(f.ppf(1 - alpha, df1, df2), 3)
-#     result.append(f"Табличне значення: {critical_value}\n")
-#
-#     if critical_value > f1:
-#         result.append("Не є статистично значущим")
-#     else:
-#         result.append("Є статистично значущим")
-#
-#     return "".join(result)
-
 def plural(selected_samples):
     result = []
 

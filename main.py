@@ -12,7 +12,8 @@ from візуалізація import parallel_coordinat, scatter_plots, bubble_c
 from кореляція import correlation_matrix, partial, plural
 from збіги import check_mean_equality, test_covariance_equality
 from регресія import check_regression_significance, check_regression_coefficients_significance, \
-    calculate_confidence_intervals, calculate_standardized_coefficients
+    calculate_confidence_intervals, calculate_standardized_coefficients, diagnostic_plot, calculate_tolerance_limits
+from МГК import pca_analysis
 
 sample_data = {}
 sample_data1 = {}
@@ -20,7 +21,32 @@ sample_data2 = {}
 sample_data3 = {}  # для другої вибірки
 sample_data4 = {}
 
-selected_samples = []
+# selected_samples = []
+selected_samples = [
+    ("Ознака 1", [129, 154, 170, 188, 161, 164, 203, 178, 212, 221, 183, 212, 220, 216, 216,
+    205, 228, 218, 190, 212, 196, 158, 255, 234, 186, 205, 241, 220, 242,
+    199, 227, 228, 232, 231, 215, 184, 175, 239, 203, 226, 226, 210]),
+
+    ("Ознака 2", [64, 74, 87, 94, 81, 90, 109, 97, 114, 123, 97, 112, 117, 113, 112,
+    110, 122, 115, 93, 111, 106, 71, 126, 143, 105, 97, 119, 111, 120,
+    105, 117, 122, 123, 121, 118, 100, 94, 124, 109, 118, 119, 103]),
+
+    ("Ознака 3", [95, 76, 71, 73, 55, 58, 65, 57, 65, 62, 52, 65, 70, 72, 75,
+    68, 78, 65, 79, 73, 87, 71, 86, 83, 70, 62, 88, 85, 89,
+    73, 77, 82, 83, 78, 74, 69, 73, 77, 70, 76, 72]),
+
+    ("Ознака 4", [17.5, 20.0, 17.9, 19.5, 17.1, 17.5, 20.7, 17.3, 20.5, 21.2, 19.3, 17.9, 19.8, 19.6, 19.6,
+    20.8, 22.5, 20.3, 19.7, 20.3, 18.3, 16.7, 21.4, 21.3, 19.0, 19.3, 21.9, 22.5, 19.9,
+    23.4, 25.7, 24.7, 25.3, 23.5, 23.4, 23.3, 22.2, 25.0, 23.3, 26.0, 26.5, 20.5]),
+
+    ("Ознака 5", [11.2, 14.2, 12.3, 14.1, 11.2, 12.7, 14.8, 12.8, 14.3, 15.2, 12.9, 14.2, 14.7, 14.0, 14.0,
+    14.1, 14.2, 13.3, 13.7, 14.7, 12.6, 12.5, 15.0, 14.8, 13.2, 13.3, 14.7, 15.4, 15.3,
+    15.0, 15.9, 15.0, 16.5, 16.8, 15.3, 15.8, 14.8, 16.8, 15.0, 16.0, 16.8, 14.0]),
+
+    ("Ознака 6", [13.8, 16.5, 15.9, 15.6, 13.0, 14.7, 15.9, 14.3, 15.5, 17.0, 13.5, 16.0, 16.5, 16.4, 16.4,
+    16.4, 17.0, 14.6, 14.8, 15.3, 14.2, 13.3, 18.0, 17.0, 14.2, 14.4, 18.3, 18.0, 17.6,
+    19.1, 18.6, 18.5, 15.5, 19.6, 19.0, 19.7, 17.0, 27.0, 18.7, 19.4, 19.3, 16.7])]
+
 selected_samples2 = []  # для часткові коофіцієнти кореляції
 selected_samples3 = []  # для другої вибірки
 selected_samples4 = []  # обрана залежна змінна
@@ -213,6 +239,9 @@ def output():
     content.append(f"{plural(selected_samples)}")
     text_widget.insert(END, ''.join(content))
 
+    text_widget.insert(END, "\n\n\t\t\tРезультати МГК\n")
+    text_widget.insert(END, pca_analysis(selected_samples))
+
 
 def stochastic_connection():
     global selected_samples
@@ -257,6 +286,10 @@ def regression():
     text_widget1.insert(END, check_regression_coefficients_significance(independent_signs, selected_samples4))
     text_widget1.insert(END, calculate_confidence_intervals(independent_signs, selected_samples4))
     text_widget1.insert(END, calculate_standardized_coefficients(independent_signs, selected_samples4))
+    text_widget1.insert(END, calculate_tolerance_limits(independent_signs, selected_samples4))
+
+    tab4 = ImageTab(notebook, diagnostic_plot(independent_signs, selected_samples4))
+    notebook.add(tab4, text="Діагностична діаграма")
 
 
 window = Tk()
@@ -295,6 +328,8 @@ menubar.add_cascade(label="Візуалізація", menu=file_menu3)
 file_menu3.add_command(label="Бульбашкова", command=lambda: bubble_chart(selected_samples, 1))
 file_menu3.add_command(label="Матриця діаграм розкиду", command=lambda: scatter_plots(selected_samples, 1))
 file_menu3.add_command(label="Паралельні координати", command=lambda: parallel_coordinat(selected_samples, 1))
+file_menu3.add_command(label="Діагностична діаграма",
+                       command=lambda: diagnostic_plot(independent_signs, selected_samples4, 1))
 
 file_menu4 = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="Стандартизація", menu=file_menu4)
@@ -321,11 +356,11 @@ file_menu6.add_command(label="Відобразити", command=regression)
 
 window.config(menu=menubar)
 
-text_widget = Text(window, height=13, width=80)  # Встановлення розмірів
+text_widget = Text(window, height=13, width=100)  # Встановлення розмірів
 text_widget.place(x=0, y=600)
 
-text_widget1 = Text(window, height=13, width=100)
-text_widget1.place(x=670, y=600)
+text_widget1 = Text(window, height=13, width=80)
+text_widget1.place(x=820, y=600)
 
 var = StringVar()
 

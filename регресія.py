@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.stats import f
 from scipy.stats import t
+import matplotlib.pyplot as plt
+from scipy.stats import chi2
 
 
 def check_regression_significance(x, y):
@@ -148,3 +150,59 @@ def calculate_standardized_coefficients(x, y):
 
     return "\n".join(result)
 
+
+def diagnostic_plot(x, y, show=None):
+    a0, A_hat = calculate_regression_coefficients(x, y)
+
+    X = np.array([feature[1] for feature in x]).T
+    Y = np.array(y[0][1])
+
+    Y_hat = a0 + X @ A_hat
+
+    residuals = Y - Y_hat
+
+    plt.figure(figsize=(6.4, 4.8))
+    plt.scatter(Y, residuals)
+    plt.axhline(0, color='red', linestyle='--', linewidth=1)
+    plt.xlabel("y")
+    plt.ylabel("Залишки (ε)")
+    plt.title("Діагностична діаграма")
+
+    plt.savefig("diagnostic_plot.png")
+
+    if show == 1:
+        plt.show()
+        return
+
+    return "diagnostic_plot.png"
+
+
+def calculate_tolerance_limits(x, y):
+    result = []
+    a0, A_hat = calculate_regression_coefficients(x, y)
+
+    # Формуємо матриці X та Y
+    X = np.array([feature[1] for feature in x]).T
+    Y = np.array(y[0][1])
+
+    # Обчислюємо прогнозовані значення
+    Y_hat = a0 + X @ A_hat
+
+    # Залишки
+    residuals = Y - Y_hat
+
+    # Оцінка дисперсії залишків
+    N = len(Y)
+    n = X.shape[1]
+    sigma_hat_squared = np.sum(residuals ** 2) / (N - n)
+    alpha = 0.05
+
+    chi2_lower = chi2.ppf(alpha / 2, N - n)
+    chi2_upper = chi2.ppf(1 - alpha / 2, N - n)
+
+    lower_limit = (N - n) * sigma_hat_squared / chi2_upper
+    upper_limit = (N - n) * sigma_hat_squared / chi2_lower
+
+    result.append(f"\n\nТолерантні межі для залишкової дисперсії: [{lower_limit}, {upper_limit}]")
+
+    return "\n".join(result)
